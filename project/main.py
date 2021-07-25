@@ -1,5 +1,9 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, jsonify, request
 from flask_login import login_required, current_user
+from sqlalchemy import func
+
+from project import db
+from project.models import User
 
 main = Blueprint('main', __name__)
 
@@ -12,4 +16,44 @@ def index():
 @main.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template('dashboard.html', username=current_user.username)
+    players = []
+    sort_by = None
+    if current_user.is_admin:
+        sort_by = request.args.get("sort_by")
+        if sort_by == 'registration_time':
+            players = db.session.query(User).order_by(User.created_at.desc())
+        else:
+            players_with_score = db.session.query(User).filter(User.score > 0).order_by(User.score.asc())
+            players_without_score = db.session.query(User).filter(User.score <= 0)
+            players = list(players_with_score) + list(players_without_score)
+
+    return render_template('dashboard.html', user=current_user, players=players)
+
+
+@main.route('/ajax/get_top_score')
+def ajax_get_top_score():
+    result = db.session.query(func.min(User.score).label('max_score')).filter(User.score > 0).one()
+    return jsonify(result=result.max_score)
+
+
+@main.route('/ajax/ajax_get_total_number_of_players')
+def ajax_get_total_number_of_players():
+    rows = db.session.query(User).count()
+    return jsonify(result=rows)
+
+
+@main.route('/ajax/ajax_get_total_number_of_online_players')
+def ajax_get_total_number_online_players():
+    rows = db.session.query(User).filter(User.is_online == True).count()
+    return jsonify(result=rows)
+
+
+@main.route('/ajax/ajax_set_player_top_score', methods=['POST'])
+def ajax_set_player_top_score():
+    score = int(request.form.get('score'))
+    user = User.query.order_by(User.created_at.desc()).first()
+    if (user.score > score or user.score == 0) and score > 0:
+        user.score = score
+        db.session.commit()
+        return jsonify(success=True)
+    return jsonify(success=False)

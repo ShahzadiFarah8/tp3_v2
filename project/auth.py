@@ -1,5 +1,5 @@
 from flask import Blueprint, redirect, url_for, request, flash, render_template
-from flask_login import login_user, login_required, logout_user
+from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from project import db
@@ -31,13 +31,23 @@ def login_post():
 
     # if the above check passes, then we know the user has the right credentials
     login_user(user, remember=remember)
+
+    # For online users count
+    user.is_online = True
+    db.session.commit()
+
     return redirect(url_for('main.dashboard'))
 
 
 @auth.route('/logout')
 @login_required
 def logout():
+    # For online users count
+    current_user.is_online = False
+    db.session.commit()
+
     logout_user()
+
     return redirect(url_for('main.index'))
 
 

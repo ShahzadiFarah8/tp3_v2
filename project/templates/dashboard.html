@@ -5,10 +5,124 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GAME</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 </head>
 <body>
-    <h1>WELCOME TO THE GAME</h1>
-    <h4>user: {{ username }}</h4>
-    <a href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i>Logout</a>
+<div class="m-3">
+    <a class="btn btn-danger" href="{{ url_for('auth.logout') }}">Logout</a>
+    {% if user.is_admin %}
+        <a class="btn btn-primary" href="http://www-ens.iro.umontreal.ca/~diallami/">Start The Game</a>
+    {% endif %}
+</div>
+<h1 class="text-center">WELCOME TO THE GAME</h1>
+<h4 class="text-center">User: {{ user.username }}</h4>
+<h4 class="text-center">Top score: <span id="top_score">...</span></h4>
+{% if user.is_admin %}
+    <h4 class="text-center">Registered players: <span id="total_players">...</span></h4>
+    <h4 class="text-center">Online players: <span id="online_players">...</span></h4>
+    <div class="m-2">
+        <input
+                class="ml-3 mr-1"
+                type="radio"
+                name="sort_by_score"
+                id="sort_by_score"
+                {% if not request.args.get('sort_by') or request.args.get('sort_by') == 'score' %}
+                checked {% endif %}
+                onclick="window.location='{{ url_for('main.dashboard') }}?sort_by=score';"
+        >
+        <label for="sort_by_score">Sort by Score</label>
+        <input
+                class="ml-4 mr-1"
+                type="radio"
+                name="sort_by_registration_time"
+                id="sort_by_registration_time"
+                {% if request.args.get('sort_by') == 'registration_time' %} checked {% endif %}
+                onclick="window.location='{{ url_for('main.dashboard') }}?sort_by=registration_time';"
+        >
+        <label for="sort_by_registration_time">Sort by Registration Time</label>
+    </div>
+    <br/>
+    <table class="table table-striped">
+        <thead class="thead-dark">
+        <tr>
+            <th scope="col">User</th>
+            <th scope="col">Best Score</th>
+            <th scope="col">Registration Time</th>
+        </tr>
+        </thead>
+        {% for player in players %}
+            <tr>
+                <td>{{ player.username }}</td>
+                <td>{% if player.score > 0 %} {{ player.score }} {% else %} Not played yet {% endif %}</td>
+                <td>{{ player.created_at }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endif %}
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+        crossorigin="anonymous"></script>
+<script>
+
+    function update_top_score() {
+        var response = $.ajax({
+            type: "GET",
+            url: "{{ url_for('main.ajax_get_top_score') }}",
+            async: false
+        }).always(function () {
+            setTimeout(function () {
+                update_top_score();
+            }, 1000);
+        }).responseText;
+        var json_response = $.parseJSON(response);
+        var result = json_response['result'];
+        $('#top_score').text(result);
+    }
+
+    update_top_score();
+
+    {% if user.is_admin %}
+        function update_total_number_of_players() {
+            var response = $.ajax({
+                type: "GET",
+                url: "{{ url_for('main.ajax_get_total_number_of_players') }}",
+                async: false
+            }).always(function () {
+                setTimeout(function () {
+                    update_total_number_of_players();
+                }, 1000);
+            }).responseText;
+            var json_response = $.parseJSON(response);
+            var result = json_response['result'];
+            $('#total_players').text(result);
+        }
+
+        update_total_number_of_players();
+
+        function update_total_number_online_players() {
+            var response = $.ajax({
+                type: "GET",
+                url: "{{ url_for('main.ajax_get_total_number_online_players') }}",
+                async: false
+            }).always(function () {
+                setTimeout(function () {
+                    update_total_number_online_players();
+                }, 1000);
+            }).responseText;
+            var json_response = $.parseJSON(response);
+            var result = json_response['result'];
+            $('#online_players').text(result);
+        }
+
+        update_total_number_online_players();
+
+    {% endif %}
+</script>
 </body>
 </html>
