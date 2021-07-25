@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='/css/style.css') }}">
+    <title>2048-Game</title>
+</head>
+<body>
+    <h1>Welcome To 2048</h1>
+    <div class="startGame">
+        <form action="{{url_for('auth.signup')}}">
+            <input type="submit" value="Create Account"></input>
+        </form>    
+        <br>
+        <form action="{{url_for('auth.login')}}">
+            <input type="submit" value="Log In"></input>
+        </form> 
+    </div>
+</body>
+</html>
