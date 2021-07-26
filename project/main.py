@@ -23,16 +23,14 @@ def dashboard():
         if sort_by == 'registration_time':
             players = db.session.query(User).order_by(User.created_at.desc())
         else:
-            players_with_score = db.session.query(User).filter(User.score > 0).order_by(User.score.asc())
-            players_without_score = db.session.query(User).filter(User.score <= 0)
-            players = list(players_with_score) + list(players_without_score)
+            players = db.session.query(User).order_by(User.score.desc())
 
     return render_template('dashboard.html', user=current_user, players=players)
 
 
 @main.route('/ajax/get_top_score')
 def ajax_get_top_score():
-    result = db.session.query(func.min(User.score).label('max_score')).filter(User.score > 0).one()
+    result = db.session.query(func.max(User.score).label('max_score')).one()
     return jsonify(result=result.max_score)
 
 
@@ -52,7 +50,7 @@ def ajax_get_total_number_online_players():
 def ajax_set_player_top_score():
     score = int(request.form.get('score'))
     user = User.query.order_by(User.created_at.desc()).first()
-    if (user.score > score or user.score == 0) and score > 0:
+    if user.score < score:
         user.score = score
         db.session.commit()
         return jsonify(success=True)

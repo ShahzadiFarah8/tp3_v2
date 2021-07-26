@@ -11,12 +11,11 @@
 <body>
 <div class="m-3">
     <a class="btn btn-danger" href="{{ url_for('auth.logout') }}">Logout</a>
-    {% if user.is_admin %}
-        <a class="btn btn-primary" href="http://www-ens.iro.umontreal.ca/~diallami/">Start The Game</a>
-    {% endif %}
+    <a class="btn btn-primary" href="http://www-ens.iro.umontreal.ca/~diallami/">Start The Game</a>
 </div>
 <h1 class="text-center">WELCOME TO THE GAME</h1>
 <h4 class="text-center">User: {{ user.username }}</h4>
+<h4 class="text-center">Your best score: {{ user.score }}</h4>
 <h4 class="text-center">Top score: <span id="top_score">...</span></h4>
 {% if user.is_admin %}
     <h4 class="text-center">Registered players: <span id="total_players">...</span></h4>
