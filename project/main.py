@@ -49,7 +49,8 @@ def ajax_get_total_number_online_players():
 @main.route('/ajax/ajax_set_player_top_score', methods=['POST'])
 def ajax_set_player_top_score():
     score = int(request.form.get('score'))
-    user = User.query.order_by(User.created_at.desc()).first()
+    username = request.form.get('username')
+    user = User.query.order_by(User.username == username).first()
     if user.score < score:
         user.score = score
         db.session.commit()
